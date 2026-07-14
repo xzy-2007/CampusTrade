@@ -1,0 +1,18 @@
+openapi: 3.0.3
+info:
+  title: CampusTrade API
+  description: CampusTrade 校园二手交易平台 REST API
+  version: 1.0.0
+servers:
+  - url: http://localhost:7001
+    description: Development server
+paths:
+  # Auth
+  # User
+  # Category
+  # Goods
+  # Favorites
+  # Orders
+  # Admin
+components:
+  schemas: {}
