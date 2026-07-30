@@ -3,6 +3,7 @@ import * as bcrypt from 'bcrypt';
 import { UserEntity } from '../entity/UserEntity';
 import { CategoryEntity } from '../entity/CategoryEntity';
 import { GoodsEntity } from '../entity/GoodsEntity';
+import { FavoriteEntity } from '../entity/FavoriteEntity';
 import { ReviewRecordEntity } from '../entity/ReviewRecordEntity';
 import { OrderEntity } from '../entity/OrderEntity';
 import { UserRole } from '../entity/UserRole';
@@ -23,6 +24,7 @@ const dataSource = new DataSource({
     UserEntity,
     CategoryEntity,
     GoodsEntity,
+    FavoriteEntity,
     ReviewRecordEntity,
     OrderEntity,
   ],
