@@ -1,0 +1,10 @@
+node_modules
+.next
+.git
+.env
+.env.local
+.env.production
+*.md
+.eslintrc.json
+tsconfig.tsbuildinfo
+next-env.d.ts

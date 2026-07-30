@@ -1,18 +1,1295 @@
 openapi: 3.0.3
 info:
   title: CampusTrade API
-  description: CampusTrade 校园二手交易平台 REST API
+  description: |
+    CampusTrade 校园二手交易平台 REST API。
+
+    鉴权方式：
+    - 公开接口：无需认证
+    - 登录接口：请求头携带 `Authorization: Bearer <token>`
+    - 管理员接口：需登录用户角色为 admin
   version: 1.0.0
+
 servers:
-  - url: http://localhost:7001
-    description: Development server
+  - url: http://localhost:7001/api
+    description: 开发环境
+
 paths:
-  # Auth
-  # User
-  # Category
-  # Goods
-  # Favorites
-  # Orders
-  # Admin
+  /auth/register:
+    post:
+      summary: 用户注册
+      description: 使用邮箱和密码注册新账号
+      operationId: registerUser
+      tags:
+        - Auth
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: 注册成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  username:
+                    type: string
+                  email:
+                    type: string
+        '409':
+          description: 邮箱已注册
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/login:
+    post:
+      summary: 用户登录
+      description: 使用邮箱和密码登录，返回 JWT token
+      operationId: loginUser
+      tags:
+        - Auth
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: 登录成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  user:
+                    $ref: '#/components/schemas/User'
+        '401':
+          description: 邮箱或密码错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/me:
+    get:
+      summary: 获取当前用户信息
+      description: 获取当前登录用户的信息
+      operationId: getCurrentUser
+      tags:
+        - Auth
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 当前用户信息
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  /users/profile:
+    get:
+      summary: 查看个人资料
+      description: 查看当前登录用户的个人资料
+      operationId: getUserProfile
+      tags:
+        - User
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 个人资料
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+    put:
+      summary: 编辑个人资料
+      description: 修改当前登录用户的个人资料（头像、联系方式等）
+      operationId: updateUserProfile
+      tags:
+        - User
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdateRequest'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  username:
+                    type: string
+                  avatar:
+                    type: string
+                  phone:
+                    type: string
+
+  /users/goods:
+    get:
+      summary: 查看我发布的商品
+      description: 查看当前用户发布的所有商品，包含审核状态和驳回理由
+      operationId: getMyGoods
+      tags:
+        - User
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: 我发布的商品列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total:
+                    type: integer
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Goods'
+
+  /users/favorites:
+    get:
+      summary: 查看我的收藏
+      description: 查看当前用户收藏的所有商品
+      operationId: getMyFavorites
+      tags:
+        - User
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: 我的收藏列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total:
+                    type: integer
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Favorite'
+
+  /goods:
+    get:
+      summary: 浏览商品列表
+      description: 分页浏览所有已上架商品，支持关键词搜索和分类筛选，仅返回 Approved 状态商品
+      operationId: listGoods
+      tags:
+        - Goods
+      security: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: categoryId
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 商品列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total:
+                    type: integer
+                  page:
+                    type: integer
+                  pageSize:
+                    type: integer
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Goods'
+    post:
+      summary: 发布商品
+      description: 发布二手商品信息，提交后状态为 PendingReview，等待管理员审核
+      operationId: createGoods
+      tags:
+        - Goods
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoodsCreateRequest'
+      responses:
+        '201':
+          description: 发布成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  title:
+                    type: string
+                  status:
+                    $ref: '#/components/schemas/GoodsStatus'
+                  createdAt:
+                    type: string
+                    format: date-time
+        '400':
+          description: 必填项缺失
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /goods/{id}:
+    get:
+      summary: 查看商品详情
+      description: 查看商品完整信息。若为本人商品，额外返回审核信息（审核结果、驳回理由）
+      operationId: getGoodsById
+      tags:
+        - Goods
+      security: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 商品详情
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Goods'
+                  - type: object
+                    properties:
+                      review:
+                        type: object
+                        properties:
+                          action:
+                            type: string
+                          reason:
+                            type: string
+                          adminName:
+                            type: string
+                          createdAt:
+                            type: string
+                            format: date-time
+    put:
+      summary: 编辑商品
+      description: 编辑自己发布的商品信息
+      operationId: updateGoods
+      tags:
+        - Goods
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoodsUpdateRequest'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  title:
+                    type: string
+                  status:
+                    $ref: '#/components/schemas/GoodsStatus'
+                  updatedAt:
+                    type: string
+                    format: date-time
+        '403':
+          description: 非本人商品
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      summary: 下架商品
+      description: 下架自己发布的商品，非物理删除，仅将状态置为 Removed。仅 PendingReview 或 Approved 状态可下架
+      operationId: deleteGoods
+      tags:
+        - Goods
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 下架成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  status:
+                    type: string
+                    example: Removed
+        '400':
+          description: 商品当前状态不允许下架
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: 非本人商品
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /goods/{id}/resubmit:
+    put:
+      summary: 重新提交审核
+      description: 审核驳回后，修改商品信息并重新提交审核（Rejected → PendingReview）
+      operationId: resubmitGoods
+      tags:
+        - Goods
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoodsCreateRequest'
+      responses:
+        '200':
+          description: 重新提交成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  status:
+                    type: string
+                    example: PendingReview
+        '400':
+          description: 商品状态非 Rejected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /favorites:
+    get:
+      summary: 查看收藏列表
+      description: 查看当前用户收藏的所有商品
+      operationId: listFavorites
+      tags:
+        - Favorite
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: 收藏列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total:
+                    type: integer
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Favorite'
+    post:
+      summary: 收藏商品
+      description: 将商品加入个人收藏夹
+      operationId: addFavorite
+      tags:
+        - Favorite
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - goodsId
+              properties:
+                goodsId:
+                  type: integer
+      responses:
+        '201':
+          description: 收藏成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  goodsId:
+                    type: integer
+                  createdAt:
+                    type: string
+                    format: date-time
+        '409':
+          description: 已收藏
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /favorites/{goodsId}:
+    delete:
+      summary: 取消收藏
+      description: 将商品移出个人收藏夹
+      operationId: removeFavorite
+      tags:
+        - Favorite
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: goodsId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 取消收藏成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: ok
+
+  /orders:
+    get:
+      summary: 查看订单列表
+      description: 查看当前用户的所有订单（作为买家或卖家）
+      operationId: listOrders
+      tags:
+        - Order
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: role
+          in: query
+          schema:
+            type: string
+            enum:
+              - buyer
+              - seller
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/OrderStatus'
+      responses:
+        '200':
+          description: 订单列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total:
+                    type: integer
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Order'
+    post:
+      summary: 创建订单
+      description: |
+        买家对商品发起购买请求。使用乐观锁并发控制：
+        在事务中校验 goods.status = Approved 且 goods.version = 传入版本号，
+        原子更新 status = Reserved、version = version + 1。
+        若版本冲突则返回 409。
+      operationId: createOrder
+      tags:
+        - Order
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - goodsId
+                - goodsVersion
+              properties:
+                goodsId:
+                  type: integer
+                  description: 商品 ID
+                goodsVersion:
+                  type: integer
+                  description: 商品乐观锁版本号，用于并发控制
+      responses:
+        '201':
+          description: 创建订单成功（Order: null → Pending, Goods: Approved → Reserved）
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  status:
+                    $ref: '#/components/schemas/OrderStatus'
+                  goodsId:
+                    type: integer
+                  createdAt:
+                    type: string
+                    format: date-time
+        '400':
+          description: 商品不可购买或购买自己商品
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: 乐观锁冲突，商品已被其他用户抢先下单
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /orders/{id}:
+    get:
+      summary: 查看订单详情
+      description: 查看特定订单的详细信息（仅订单参与方可见）
+      operationId: getOrderById
+      tags:
+        - Order
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 订单详情
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '403':
+          description: 非订单参与方
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /orders/{id}/seller-confirm:
+    put:
+      summary: 卖家确认交易
+      description: 卖家确认订单（前置条件：当前用户是 seller，order.status = Pending；状态变化：Pending → Confirmed）
+      operationId: sellerConfirmOrder
+      tags:
+        - Order
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 确认成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  status:
+                    type: string
+                    example: Confirmed
+        '400':
+          description: 订单状态非 Pending
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: 非卖家
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /orders/{id}/buyer-confirm:
+    put:
+      summary: 买家确认收货
+      description: 买家确认收货完成交易（前置条件：当前用户是 buyer，order.status = Confirmed；状态变化：Confirmed → Completed，Goods: Reserved → Sold）
+      operationId: buyerConfirmOrder
+      tags:
+        - Order
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 确认收货成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  status:
+                    type: string
+                    example: Completed
+                  goodsStatus:
+                    type: string
+                    example: Sold
+        '400':
+          description: 订单状态非 Confirmed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: 非买家
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /orders/{id}/cancel:
+    put:
+      summary: 取消订单
+      description: 买家取消订单（前置条件：当前用户是 buyer，order.status = Pending；状态变化：Pending → Cancelled，Goods: Reserved → Approved）
+      operationId: cancelOrder
+      tags:
+        - Order
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 取消成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  status:
+                    type: string
+                    example: Cancelled
+                  goodsStatus:
+                    type: string
+                    example: Approved
+        '400':
+          description: 订单状态非 Pending
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: 非买家
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /categories:
+    get:
+      summary: 获取分类列表
+      description: 获取所有商品分类
+      operationId: listCategories
+      tags:
+        - Category
+      security: []
+      responses:
+        '200':
+          description: 分类列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Category'
+
+  /admin/goods:
+    get:
+      summary: 获取待审核商品列表
+      description: 获取待审核商品列表，可按状态筛选（管理员权限）
+      operationId: adminListGoods
+      tags:
+        - Admin
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/GoodsStatus'
+          description: 按商品状态筛选，默认 PendingReview
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: 商品列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total:
+                    type: integer
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Goods'
+        '403':
+          description: 需要管理员权限
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /admin/goods/{id}/review:
+    put:
+      summary: 审核商品
+      description: 管理员审核商品。通过则 PendingReview → Approved；驳回则 PendingReview → Rejected（驳回时必须填写理由）
+      operationId: reviewGoods
+      tags:
+        - Admin
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - action
+              properties:
+                action:
+                  type: string
+                  enum:
+                    - approved
+                    - rejected
+                  description: 审核动作
+                reason:
+                  type: string
+                  description: 驳回理由，action 为 rejected 时必填
+      responses:
+        '200':
+          description: 审核完成
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  status:
+                    $ref: '#/components/schemas/GoodsStatus'
+        '400':
+          description: 商品状态非 PendingReview 或驳回时未填写理由
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: 需要管理员权限
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /admin/goods/{id}/force-remove:
+    put:
+      summary: 强制下架商品
+      description: 管理员强制下架商品，任意状态均可操作（任意状态 → Removed）
+      operationId: forceRemoveGoods
+      tags:
+        - Admin
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 强制下架成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  status:
+                    type: string
+                    example: Removed
+        '403':
+          description: 需要管理员权限
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /admin/review-records:
+    get:
+      summary: 查看审核记录
+      description: 查看所有商品的审核记录（管理员权限）
+      operationId: listReviewRecords
+      tags:
+        - Admin
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: goodsId
+          in: query
+          schema:
+            type: integer
+          description: 按商品筛选
+      responses:
+        '200':
+          description: 审核记录列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total:
+                    type: integer
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ReviewRecord'
+        '403':
+          description: 需要管理员权限
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
 components:
-  schemas: {}
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: 错误信息
+
+    GoodsStatus:
+      type: string
+      enum:
+        - PendingReview
+        - Rejected
+        - Approved
+        - Reserved
+        - Sold
+        - Removed
+      description: 商品状态：PendingReview(待审核)、Rejected(审核驳回)、Approved(已上架)、Reserved(已预订)、Sold(已售出)、Removed(已下架)
+
+    OrderStatus:
+      type: string
+      enum:
+        - Pending
+        - Confirmed
+        - Completed
+        - Cancelled
+      description: 订单状态：Pending(待确认)、Confirmed(已确认)、Completed(已完成)、Cancelled(已取消)
+
+    RegisterRequest:
+      type: object
+      required:
+        - username
+        - email
+        - password
+      properties:
+        username:
+          type: string
+          description: 用户名
+        email:
+          type: string
+          format: email
+          description: 邮箱（登录凭证）
+        password:
+          type: string
+          format: password
+          description: 登录密码
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          description: 邮箱
+        password:
+          type: string
+          format: password
+          description: 登录密码
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum:
+            - user
+            - admin
+        avatar:
+          type: string
+        phone:
+          type: string
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    UserUpdateRequest:
+      type: object
+      properties:
+        username:
+          type: string
+        avatar:
+          type: string
+        phone:
+          type: string
+
+    GoodsCreateRequest:
+      type: object
+      required:
+        - title
+        - description
+        - price
+        - categoryId
+        - images
+      properties:
+        title:
+          type: string
+          description: 商品标题
+        description:
+          type: string
+          description: 商品描述
+        price:
+          type: number
+          format: float
+          description: 商品价格
+        categoryId:
+          type: integer
+          description: 分类 ID
+        images:
+          type: array
+          items:
+            type: string
+          description: 商品图片路径列表
+
+    GoodsUpdateRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+          format: float
+        categoryId:
+          type: integer
+        images:
+          type: array
+          items:
+            type: string
+
+    Goods:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+          format: float
+        images:
+          type: array
+          items:
+            type: string
+        status:
+          $ref: '#/components/schemas/GoodsStatus'
+        version:
+          type: integer
+          description: 乐观锁版本号
+        userId:
+          type: integer
+        categoryId:
+          type: integer
+        category:
+          $ref: '#/components/schemas/Category'
+        user:
+          $ref: '#/components/schemas/User'
+        reviewReason:
+          type: string
+          description: 驳回理由（仅本人查询时返回）
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Favorite:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        goodsId:
+          type: integer
+        goods:
+          $ref: '#/components/schemas/Goods'
+        createdAt:
+          type: string
+          format: date-time
+
+    Order:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+          description: 买家 ID
+        goodsId:
+          type: integer
+        goods:
+          $ref: '#/components/schemas/Goods'
+        buyer:
+          $ref: '#/components/schemas/User'
+        seller:
+          $ref: '#/components/schemas/User'
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Category:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+          description: 分类名称
+        description:
+          type: string
+          description: 分类描述
+
+    ReviewRecord:
+      type: object
+      properties:
+        id:
+          type: integer
+        goodsId:
+          type: integer
+        goods:
+          $ref: '#/components/schemas/Goods'
+        adminId:
+          type: integer
+        admin:
+          $ref: '#/components/schemas/User'
+        action:
+          type: string
+          enum:
+            - approved
+            - rejected
+          description: 审核动作
+        reason:
+          type: string
+          description: 驳回理由
+        createdAt:
+          type: string
+          format: date-time

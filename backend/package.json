@@ -1,0 +1,51 @@
+{
+  "name": "campus-trade-backend",
+  "version": "1.0.0",
+  "description": "CampusTrade 校园二手交易平台后端服务",
+  "private": true,
+  "scripts": {
+    "dev": "cross-env NODE_ENV=local midway-bin dev --ts",
+    "start": "cross-env NODE_ENV=production node bootstrap.js",
+    "build": "midway-bin build -c",
+    "seed": "cross-env NODE_ENV=local npx ts-node src/seed/seed.ts",
+    "test": "midway-bin test --ts",
+    "lint": "eslint . --ext .ts",
+    "lint:fix": "eslint . --ext .ts --fix",
+    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\""
+  },
+  "dependencies": {
+    "@midwayjs/bootstrap": "^3.20.24",
+    "@midwayjs/core": "^3.0.0",
+    "@midwayjs/logger": "^3.4.2",
+    "@midwayjs/typeorm": "^3.0.0",
+    "@midwayjs/web": "^3.0.0",
+    "bcrypt": "^5.1.0",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.15.1",
+    "jsonwebtoken": "^9.0.0",
+    "koa": "^2.13.0",
+    "mysql2": "^3.0.0",
+    "reflect-metadata": "^0.1.13",
+    "typeorm": "^0.3.0"
+  },
+  "devDependencies": {
+    "@midwayjs/cli": "^1.3.0",
+    "@midwayjs/mock": "^3.0.0",
+    "@types/bcrypt": "^5.0.0",
+    "@types/jest": "^29.0.0",
+    "@types/jsonwebtoken": "^9.0.0",
+    "@types/node": "^18.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "cross-env": "^7.0.0",
+    "egg-mock": "^5.15.2",
+    "eslint": "^8.0.0",
+    "jest": "^29.0.0",
+    "prettier": "^3.0.0",
+    "ts-jest": "^29.0.0",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
