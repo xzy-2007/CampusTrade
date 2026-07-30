@@ -41,8 +41,10 @@ jobs:
 
       - run: npx tsc --noEmit
 
-      - run: npm test
+      - run: npx jest --runInBand --verbose
         env:
+          MIDWAY_TS_MODE: "true"
+          MIDWAY_JEST_MODE: "true"
           DATABASE_HOST: 127.0.0.1
           DATABASE_PORT: "3306"
           DATABASE_USER: root
