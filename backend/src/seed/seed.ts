@@ -20,6 +20,7 @@ const dataSource = new DataSource({
   database: process.env.DATABASE_NAME || 'campus_trade',
   charset: 'utf8mb4',
   timezone: '+08:00',
+  synchronize: true,
   entities: [
     UserEntity,
     CategoryEntity,
