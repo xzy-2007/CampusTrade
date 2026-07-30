@@ -5,7 +5,7 @@ export default {
     dataSource: {
       default: {
         type: 'mysql',
-        synchronize: false,
+        synchronize: true,
         logging: false,
       },
     },
