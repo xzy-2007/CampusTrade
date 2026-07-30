@@ -43,8 +43,10 @@ jobs:
 
       - run: npx jest --runInBand --verbose
         env:
+          NODE_ENV: test
           MIDWAY_TS_MODE: "true"
           MIDWAY_JEST_MODE: "true"
+          MIDWAY_BIN_JEST_ROOT_DIR: ${{ github.workspace }}/backend
           DATABASE_HOST: 127.0.0.1
           DATABASE_PORT: "3306"
           DATABASE_USER: root
