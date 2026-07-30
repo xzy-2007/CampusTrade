@@ -5,9 +5,14 @@ export default {
     dataSource: {
       default: {
         type: 'mysql',
-        synchronize: true,
+        synchronize: false,
         logging: false,
       },
+    },
+  },
+  security: {
+    csrf: {
+      enable: false,
     },
   },
 } as unknown as MidwayConfig;
