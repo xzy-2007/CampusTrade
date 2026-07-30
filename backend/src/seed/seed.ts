@@ -198,7 +198,9 @@ async function seed() {
   await dataSource.destroy();
 }
 
-seed().catch((err) => {
-  console.error('[Seed] 失败:', err.message);
-  process.exit(1);
-});
+if (require.main === module) {
+  seed().catch((err) => {
+    console.error('[Seed] 失败:', err.message);
+    process.exit(1);
+  });
+}
