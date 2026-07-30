@@ -41,6 +41,15 @@ jobs:
 
       - run: npx tsc --noEmit
 
+      - run: npx ts-node src/seed/seed.ts
+        env:
+          NODE_ENV: test
+          DATABASE_HOST: 127.0.0.1
+          DATABASE_PORT: "3306"
+          DATABASE_USER: root
+          DATABASE_PASSWORD: ""
+          DATABASE_NAME: campus_trade
+
       - run: npx jest --runInBand --verbose
         env:
           NODE_ENV: test
