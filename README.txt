@@ -6,7 +6,7 @@ CampusTrade 是一个面向高校师生的校园内二手交易平台，旨在�
 
 ## 2. GitHub 仓库地址
 
-https://github.com/<your-username>/CampusTrade
+https://github.com/xzy-2007/CampusTrade
 
 （若为私有仓库，请邀请 sunshirezxf@hotmail.com 作为协作者）
 
