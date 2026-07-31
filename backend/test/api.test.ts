@@ -314,7 +314,7 @@ describe('Order', () => {
   it('PUT /api/orders/:id/seller-confirm - seller should confirm', async () => {
     const res = await app.httpRequest()
       .put(`/api/orders/${orderId}/seller-confirm`)
-      .set('Authorization', `Bearer ${adminToken}`)
+      .set('Authorization', `Bearer ${userToken}`)
       .expect(200);
 
     expect(res.body.status).toBe('Confirmed');

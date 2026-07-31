@@ -1,5 +1,3 @@
-import { MidwayConfig } from '@midwayjs/core';
-
 export default {
   typeorm: {
     dataSource: {
@@ -10,4 +8,4 @@ export default {
       },
     },
   },
-} as unknown as MidwayConfig;
+};

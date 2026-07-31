@@ -20,7 +20,7 @@ export default {
         database: process.env.DATABASE_NAME || 'campus_trade',
         synchronize: false,
         logging: process.env.NODE_ENV === 'local' ? true : false,
-        entities: ['**/entity/*.entity{.ts,.js}'],
+        entities: ['**/entity/*.{ts,js}'],
         migrations: ['**/migration/*{.ts,.js}'],
         migrationsTableName: 'migrations_history',
         timezone: '+08:00',
